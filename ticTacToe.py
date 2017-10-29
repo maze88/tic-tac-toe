@@ -19,7 +19,7 @@ def showBoard(gameState):
     for row in gameState:
         print([icon(square) for square in row])
 
-def swap_turn(playerNumber):
+def swapTurn(playerNumber):
     """
     flip player turn between 1 and 2.
     """
@@ -28,35 +28,7 @@ def swap_turn(playerNumber):
     elif playerNumber == 2:
         return 1
 
-def turnInput(playerNumber):
-    try:
-        move = input('player {} ({}),  make your move [row, col]: '.format(playerNumber, icon(whosTurn))).strip()
-        if move.lower() == 'quit':
-            sys.exit()
-        move = move.split(',')
-        if len(move) != 2:
-            raise ValueError
-        move = [int(coord) - 1 for coord in move]
-        if gameState[move[0]][move[1]] == ' ':
-            gameState[move[0]][move[1]] = playerNumber
-            showBoard(gameState)
-
-            # from here below should be another seperate function
-            if check_win(gameState, whosTurn):
-                gameOn = False
-                print('************************')
-                print('game over! player {} won!'.format(whosTurn))
-                print('************************')
-            whosTurn = swap_turn(whosTurn)
-        else:
-            print('illegal move. please try another sqaure.')
-
-    except ValueError:
-        print('\nerror. please enter your move with the correct format:')
-        print('row, column')
-        print('for example to mark the top right square,  enter: 1, 3\n')
-
-def check_win(game, w):
+def checkWin(game, w):
     """
     for given game state 'game' and player 'w'. returns True if player 'w' has won, or False if not.
     """
@@ -75,6 +47,23 @@ def check_win(game, w):
         win = True
     return win
 
+def turnCycle(playerNumber, gameState):
+    try:
+        move = input('player {} ({}),  make your move [row, col]: '.format(playerNumber, icon(playerNumber))).strip()
+        if move.lower() == 'quit':
+            sys.exit()
+        move = move.split(',')
+        if len(move) != 2:
+            raise ValueError
+        move = [int(coord) - 1 for coord in move]
+        if gameState[move[0]][move[1]] == ' ':
+            gameState[move[0]][move[1]] = playerNumber
+        else:
+            print('illegal move. please try another sqaure.')
+    except ValueError:
+        print('\nerror. please enter your move with the correct format:')
+        print('row, column')
+        print('for example to mark the top right square,  enter: 1, 3\n')
 
 def main():
     print('***********************')
@@ -93,13 +82,18 @@ def main():
     gameOn = True
 
     while gameOn:
-        turnInput()  # temp pseudo name
+        turnCycle(whosTurn, gameState)
+        showBoard(gameState)
+        if checkWin(gameState, whosTurn):
+            gameOn = False
+            print('************************')
+            print('game over! player {} won!'.format(whosTurn))
+            print('************************')
+        whosTurn = swapTurn(whosTurn)
 
         fullSquares = 0
         for square in gameState[0] + gameState[1] + gameState[2]:
-            if square == ' ':
-                pass
-            else:
+            if square != ' ':
                 fullSquares += 1
         if fullSquares == 9 and gameOn:
             gameOn = False
@@ -108,8 +102,8 @@ def main():
             print('*************************')
 
         if not gameOn:
-            yn = input('do you want to play another game [type Y for yes or anything else to quit]?\n').lower()
-            if yn == 'y':
+            yn = input('do you want to play another game [type Y for yes or anything else to quit]?\n')
+            if yn.lower() == 'y':
                 gameState = [list(row) for row in stateState]
                 gameOn = True
             else:
